@@ -1,5 +1,8 @@
 "use server";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import bcrypt from "bcrypt";
+import { getIronSession } from "iron-session";
 import {
   PASSWORD_MIN_LENGTH,
   PASSWORD_REGEX,
@@ -78,7 +81,7 @@ export async function createAccount(prevState: any, formData: FormData) {
     password: formData.get("password"),
     confirm_password: formData.get("confirm_password"),
   };
-  const result = formSchema.safeParse(data);
+  const result = await formSchema.safeParseAsync(data);
   if (!result.success) {
     return result.error.flatten();
   } else {
@@ -94,6 +97,13 @@ export async function createAccount(prevState: any, formData: FormData) {
       },
     });
     // log the user in
-    // redirect "/home"
+    const cookie = await getIronSession(cookies(), {
+      cookieName: "delicious-karrot",
+      password: process.env.COOKIE_PASSWORD!,
+    });
+    //@ts-ignore
+    cookie.id = user.id;
+    await cookie.save();
+    redirect("/profile");
   }
 }
