@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { unstable_cache as nextCache } from "next/cache";
+import { revalidatePath, unstable_cache as nextCache } from "next/cache";
 
 import { Prisma } from "@prisma/client";
 
@@ -36,9 +36,17 @@ export const metadata = {
 
 export default async function Products() {
   const initialProducts = await getCachedProducts();
+  const revalidate = async () => {
+    "use server";
+    revalidatePath("/home");
+  };
+
   return (
     <div>
       <ProductList initialProducts={initialProducts} />
+      <form action={revalidate}>
+        <button>Revalidate</button>
+      </form>
       <Link
         href="/products/add"
         className="bg-orange-500 flex items-center justify-center rounded-full size-16 fixed bottom-24 right-8 text-white transition-colors hover:bg-orange-400"
